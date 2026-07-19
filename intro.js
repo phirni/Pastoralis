@@ -1,11 +1,28 @@
 // intro.js
-// Builds a split-flap billboard grid for today's quote, flips it in on load,
-// then waits for a user click before revealing the site.
-// Plays once per browser session (sessionStorage), so re-opening the tab or
-// navigating internally won't replay it, but a fresh session will.
+// Split-flap intro with random word placement, word-by-word animation,
+// fullscreen square tiles, and preloaded background images.
 
 (function () {
-  const SEEN_KEY = "pastoralis_intro_seen";
+
+  // ============================================================
+  // CONFIGURATION
+  // ============================================================
+  const CELL_SIZE = 96;
+
+  const IMAGES = [
+    "cowboy.jpg",
+    "cowboy2.jpg",
+    "painting1.jpg",
+    "painting2.jpg",
+    "painting3.jpg",
+    "painting4.jpg",
+    "painting5.jpg",
+    "painting6.jpg",
+    "painting7.jpg",
+    "painting8.jpg"
+  ];
+  // ============================================================
+
   const introEl = document.getElementById("intro");
   const gridEl = document.getElementById("flip-grid");
   const captionEl = document.getElementById("intro-caption");
@@ -14,59 +31,92 @@
 
   if (!introEl || !gridEl) return;
 
+  // ----- sessionStorage check (commented out – plays every time) -----
+  // const SEEN_KEY = "pastoralis_intro_seen";
   // const alreadySeen = sessionStorage.getItem(SEEN_KEY) === "1";
-
   // if (alreadySeen) {
   //   introEl.classList.add("no-anim");
   //   revealSite(true);
   //   return;
   // }
+  // ------------------------------------------------------------------
 
+  // ----- pick quote -----
   const quote = typeof getTodaysQuote === "function"
     ? getTodaysQuote()
     : { text: "The years teach much which the days never know.", source: "Emerson" };
 
-  // Dynamic grid sizing – fills the entire viewport
-  const CELL_SIZE = 110;
+  // ----- pick random image -----
+  const imageName = IMAGES[Math.floor(Math.random() * IMAGES.length)];
+
+  // ----- calculate grid dimensions -----
   const cols = Math.ceil(window.innerWidth / CELL_SIZE);
-  const totalRows = Math.ceil(window.innerHeight / CELL_SIZE);
+  const rows = Math.ceil(window.innerHeight / CELL_SIZE);
 
-  const seed = seedFromDate(new Date());
-  const rng = mulberry32(seed);
+  // ----- seeded RNG (using current timestamp for freshness) -----
+  const rng = mulberry32(Date.now());
 
-  const rows = buildRows(quote.text, cols, totalRows, rng);
-  renderGrid(rows, cols);
-  captionEl.textContent = `“${quote.text}” — ${quote.source}`;
-
-  // ============================================================
-  // NEW BEHAVIOUR: after animation, wait for a click
-  // ============================================================
   let canExit = false;
 
-  requestAnimationFrame(() => {
-    animateGrid(rows, cols, () => {
-      // Animation finished → allow exit and show the "enter" prompt
-      canExit = true;
-      introEl.classList.add("ready");
-    });
-  });
+  // ----- set caption immediately -----
+  captionEl.textContent = `“${quote.text}” — ${quote.source}`;
 
-  // Skip button: only works if canExit is true
+  // ----- preload background image, then initialise board -----
+  preloadBackground(imageName)
+    .then(() => {
+      initializeBoard();
+    });
+
+  // ============================================================
+  // PRELOAD & INITIALISE
+  // ============================================================
+
+  function preloadBackground(image) {
+    return new Promise((resolve) => {
+      const img = new Image();
+      img.onload = () => {
+        gridEl.style.backgroundImage = `url(assets/${image})`;
+        resolve();
+      };
+      img.onerror = resolve;
+      img.src = `assets/${image}`;
+    });
+  }
+
+  function initializeBoard() {
+    const board = buildBoard(quote.text);
+    renderGrid(board, cols);
+
+    requestAnimationFrame(() => {
+      animateGrid(board, cols, () => {
+        canExit = true;
+        introEl.classList.add("ready");
+      });
+    });
+  }
+
+  // ============================================================
+  // EVENT LISTENERS
+  // ============================================================
+
   skipBtn.addEventListener("click", (e) => {
-    e.stopPropagation(); // prevent triggering the intro click
+    e.stopPropagation();
     if (!canExit) return;
     finish();
   });
 
-  // Click anywhere on the intro (but not on the skip button) to proceed
   introEl.addEventListener("click", (e) => {
     if (!canExit) return;
     if (e.target === skipBtn) return;
     finish();
   });
 
+  // ============================================================
+  // FINISH & REVEAL
+  // ============================================================
+
   function finish() {
-    sessionStorage.setItem(SEEN_KEY, "1");
+    // sessionStorage.setItem(SEEN_KEY, "1");
     introEl.classList.add("hidden");
     revealSite(false);
     setTimeout(() => introEl.classList.add("no-anim"), 650);
@@ -79,135 +129,141 @@
     document.documentElement.classList.add("site-revealed");
   }
 
-  // ---------- grid construction (unchanged) ----------
+  // ============================================================
+  // RANDOM BOARD BUILDER (Part 3)
+  // ============================================================
 
-  function buildRows(text, cols, totalRows, rng) {
+  function buildBoard(text) {
+    const board = [];
+    for (let r = 0; r < rows; r++) {
+      board.push(new Array(cols).fill(null));
+    }
+
     const words = text
       .toUpperCase()
       .replace(/[.,!?;:"“”]/g, "")
       .split(/\s+/)
       .filter(Boolean);
 
-    const lines = [];
-    let cur = [];
-    let curLen = 0;
-    words.forEach((w) => {
-      const addLen = cur.length ? curLen + 1 + w.length : w.length;
-      if (addLen > cols) {
-        lines.push(cur);
-        cur = [w];
-        curLen = w.length;
-      } else {
-        curLen = addLen;
-        cur.push(w);
+    const usedRows = [];
+
+    words.forEach(word => {
+      let placed = false;
+      for (let tries = 0; tries < 100 && !placed; tries++) {
+        const row = Math.floor(Math.random() * rows);
+        if (usedRows.includes(row)) continue;
+        const maxStart = cols - word.length - 2;
+        if (maxStart < 1) continue;
+        const start = 1 + Math.floor(Math.random() * maxStart);
+
+        let free = true;
+        for (let i = 0; i < word.length; i++) {
+          if (board[row][start + i] != null) {
+            free = false;
+            break;
+          }
+        }
+        if (!free) continue;
+
+        usedRows.push(row);
+        for (let i = 0; i < word.length; i++) {
+          board[row][start + i] = word[i];
+        }
+        placed = true;
       }
     });
-    if (cur.length) lines.push(cur);
 
-    const contentRows = [];
-    contentRows.push(null);
-    for (let i = 0; i < lines.length; i++) {
-      contentRows.push(lineToRow(lines[i], cols, rng));
-      const isGroupEnd = (i + 1) % 2 === 0;
-      if (isGroupEnd && i !== lines.length - 1) contentRows.push(null);
-    }
-    contentRows.push(null);
-
-    const topPad = Math.floor((totalRows - contentRows.length) / 2);
-    const bottomPad = totalRows - contentRows.length - topPad;
-
-    const finalRows = [];
-    for (let i = 0; i < topPad; i++) finalRows.push(null);
-    finalRows.push(...contentRows);
-    for (let i = 0; i < bottomPad; i++) finalRows.push(null);
-
-    return finalRows;
+    return board;
   }
 
-  function lineToRow(words, cols, rng) {
-    const lineLen = words.join(" ").length;
-    const maxStart = Math.max(0, cols - lineLen);
-    const start = Math.floor(rng() * (maxStart + 1));
-    const row = new Array(cols).fill(null);
-    let col = start;
-    words.forEach((w, wi) => {
-      for (let i = 0; i < w.length; i++) {
-        row[col] = w[i];
-        col++;
-      }
-      col++;
-    });
-    return row;
-  }
+  // ============================================================
+  // RENDER – fixed pixel sizes (Part 2)
+  // ============================================================
 
-  // ---------- rendering (unchanged) ----------
-
-  function renderGrid(rows, cols) {
+  function renderGrid(board, cols) {
     gridEl.innerHTML = "";
-    gridEl.style.gridTemplateColumns = `repeat(${cols}, 1fr)`;
-    gridEl.style.gridTemplateRows = `repeat(${rows.length}, 1fr)`;
+    gridEl.style.gridTemplateColumns = `repeat(${cols}, ${CELL_SIZE}px)`;
+    gridEl.style.gridTemplateRows = `repeat(${rows}, ${CELL_SIZE}px)`;
 
-    rows.forEach((row) => {
-      for (let c = 0; c < cols; c++) {
-        const ch = row ? row[c] : null;
+    board.forEach(row => {
+      row.forEach(letter => {
         const cell = document.createElement("div");
-        if (ch) {
+        if (letter) {
           cell.className = "cell letter";
           const glyph = document.createElement("span");
           glyph.className = "glyph";
+          glyph.dataset.target = letter;
           glyph.textContent = "";
-          glyph.dataset.target = ch;
           cell.appendChild(glyph);
         } else {
           cell.className = "cell blank";
         }
         gridEl.appendChild(cell);
-      }
+      });
     });
   }
 
-  function animateGrid(rows, cols, onDone) {
-    const glyphs = Array.from(gridEl.querySelectorAll(".glyph"));
+  // ============================================================
+  // WORD‑BY‑WORD ANIMATION (Part 3)
+  // ============================================================
+
+  function animateGrid(board, cols, onDone) {
+    const cells = [...gridEl.querySelectorAll(".glyph")];
     const ALPHABET = "ABCDEFGHIJKLMNOPQRSTUVWXYZ";
-    const STEPS = 5;
     const STEP_MS = 55;
-    const STAGGER_MS = 18;
+    const LETTER_DELAY = 35;
+    const WORD_DELAY = 180;
 
-    let finishedCount = 0;
+    // Group glyphs by row (word)
+    let words = [];
+    let current = [];
+    cells.forEach(g => {
+      const rect = g.parentElement.getBoundingClientRect();
+      current.push({ glyph: g, x: rect.left, y: rect.top });
+    });
+    current.sort((a, b) => {
+      if (Math.abs(a.y - b.y) < 10) return a.x - b.x;
+      return a.y - b.y;
+    });
+    words.push(current);
 
-    glyphs.forEach((glyph, idx) => {
-      const target = glyph.dataset.target;
-      const delay = idx * STAGGER_MS;
+    let finished = 0;
+    words.forEach((word, wordIndex) => {
+      word.forEach((item, letterIndex) => {
+        setTimeout(() => {
+          flipLetter(item.glyph);
+        }, wordIndex * WORD_DELAY + letterIndex * LETTER_DELAY);
+      });
+    });
+
+    function flipLetter(glyph) {
       let step = 0;
-
-      setTimeout(function start() {
-        runStep();
-      }, delay);
-
-      function runStep() {
-        if (step < STEPS) {
-          glyph.textContent = ALPHABET[Math.floor(rng() * ALPHABET.length)];
+      function next() {
+        if (step < 5) {
+          glyph.textContent = ALPHABET[Math.floor(Math.random() * 26)];
         } else {
-          glyph.textContent = target;
+          glyph.textContent = glyph.dataset.target;
         }
         glyph.classList.remove("flipping");
         void glyph.offsetWidth;
         glyph.classList.add("flipping");
-
         step++;
-        if (step <= STEPS) {
-          setTimeout(runStep, STEP_MS);
+        if (step <= 5) {
+          setTimeout(next, STEP_MS);
         } else {
-          finishedCount++;
-          if (finishedCount === glyphs.length) onDone();
+          finished++;
+          if (finished === cells.length) {
+            onDone();
+          }
         }
       }
-    });
-
-    if (glyphs.length === 0) onDone();
+      next();
+    }
   }
 
-  // ---------- seeded RNG (mulberry32) ----------
+  // ============================================================
+  // SEEDED RNG (mulberry32)
+  // ============================================================
 
   function seedFromDate(date) {
     const s = `${date.getFullYear()}-${date.getMonth()}-${date.getDate()}`;
@@ -227,4 +283,5 @@
       return ((t ^ (t >>> 14)) >>> 0) / 4294967296;
     };
   }
+
 })();
