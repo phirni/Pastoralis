@@ -1,0 +1,72 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+<title>Blog — Internet Pastoralis</title>
+<link rel="stylesheet" href="style.css">
+</head>
+<body>
+
+  <header class="site-header">
+    <div class="site-header-inner">
+      <div class="site-title-group">
+        <a class="site-title" href="index.html">Internet Pastoralis</a>
+        <nav class="site-nav" aria-label="Primary">
+          <a href="blog.html" aria-current="page">Blog</a>
+          <a href="projects.html">Projects</a>
+        </nav>
+      </div>
+      <div class="site-socials">
+        <a href="https://github.com/phirni" target="_blank" rel="noopener">GitHub</a>
+        <a href="https://www.linkedin.com/in/adya-yadav/" target="_blank" rel="noopener">LinkedIn</a>
+        <a href="https://x.com/forixv" target="_blank" rel="noopener">X</a>
+      </div>
+    </div>
+  </header>
+
+  <main>
+    <p class="eyebrow">Writing</p>
+    <h1>Blog</h1>
+    <p class="lede">Notes on research, reading, and whatever else is top of mind.</p>
+
+    <ul class="post-list" id="post-list">
+      <li class="small">Loading posts…</li>
+    </ul>
+  </main>
+
+  <footer class="site-footer">
+    <div class="site-footer-inner">
+      <span>Thank you.</span>
+      <span>&copy; <span id="year"></span> Adya Yadav</span>
+    </div>
+  </footer>
+
+  <script src="main.js"></script>
+  <script>
+    fetch("posts.json")
+      .then((r) => r.json())
+      .then((posts) => {
+        posts.sort((a, b) => new Date(b.date) - new Date(a.date));
+        const list = document.getElementById("post-list");
+        list.innerHTML = "";
+        posts.forEach((p) => {
+          const li = document.createElement("li");
+          li.className = "post-item";
+          li.innerHTML = `
+            <a href="posts/${p.slug}.html">${p.title}</a>
+            <time datetime="${p.date}">${new Date(p.date).toLocaleDateString("en-US", { year: "numeric", month: "short", day: "numeric" })}</time>
+          `;
+          list.appendChild(li);
+        });
+        if (posts.length === 0) {
+          list.innerHTML = '<li class="small">Nothing here yet.</li>';
+        }
+      })
+      .catch(() => {
+        document.getElementById("post-list").innerHTML =
+          '<li class="small">Couldn\'t load posts — if you\'re viewing this file directly (file://), run a local server instead, e.g. <code>python3 -m http.server</code>.</li>';
+      });
+  </script>
+</body>
+</html>
