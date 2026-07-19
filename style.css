@@ -303,60 +303,55 @@ footer.site-footer {
     overflow:hidden;
 }
 
-.flip-grid{
-
-    position:absolute;
-    inset:0;
-
-    display:grid;
-
-    width:100vw;
-    height:100vh;
-
-    background-image:url("assets/cowboy.jpg");
-
-    background-size:cover;
-    background-position:center;
+/* 1. Flip grid – fullscreen, no aspect-ratio */
+.flip-grid {
+  position: absolute;
+  inset: 0;
+  display: grid;
+  justify-content: center;
+  align-content: center;
+  overflow: hidden;
+  background-size: cover;
+  background-position: center;
+  border: 1px solid var(--rule);
 }
 
+/* 2. Square cells */
 .cell {
+  width: 96px;
+  height: 96px;
+  aspect-ratio: 1 / 1;
   position: relative;
-  /* border: 1px solid rgba(0, 0, 0, 0.12); */
-  aspect-ratio:1;
+  border: 1px solid rgba(0, 0, 0, 0.12);
   overflow: hidden;
   perspective: 300px;
 }
 
+/* 3. Blank tiles – semi-transparent */
 .cell.blank {
-  background: var(--tile-blank);
-  filter: saturate(0.35);
+  background: rgba(50, 45, 40, 0.55);
+  transition: 0.4s;
 }
 
+/* 4. Letter tiles – with shadow for depth */
 .cell.letter {
-  background: var(--tile-pink);
-  display: flex;
-  align-items: center;
-  justify-content: center;
+  background: #e7b7c4;
+  box-shadow:
+    inset 0 1px rgba(255, 255, 255, 0.25),
+    inset 0 -2px rgba(0, 0, 0, 0.12);
 }
 
-.cell.letter .glyph {
-  font-family: var(--serif);
-  font-weight: 700;
-  color: var(--ink);
-  font-size: clamp(10px, 2.4vw, 26px);
-  display: inline-block;
-  transform-origin: 50% 50%;
-}
-
-.cell.letter .glyph.flipping {
-  animation: flapTurn 130ms linear;
-}
-
+/* 5. Cleaner flip animation */
 @keyframes flapTurn {
-  0%   { transform: rotateX(0deg);   opacity: 1; }
-  45%  { transform: rotateX(-92deg); opacity: 0.35; }
-  55%  { transform: rotateX(-92deg); opacity: 0.35; }
-  100% { transform: rotateX(0deg);   opacity: 1; }
+  0%   { transform: rotateX(0deg); }
+  49%  { transform: rotateX(-90deg); }
+  50%  { transform: rotateX(-90deg); }
+  100% { transform: rotateX(0deg); }
+}
+
+/* 6. Smaller glyphs (more authentic) */
+.glyph {
+  font-size: clamp(12px, 1.3vw, 22px);
 }
 
 .intro-caption {
