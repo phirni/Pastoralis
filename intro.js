@@ -141,8 +141,8 @@
   // ---- 6. Flap animation ----
   const ALPHABET = "ABCDEFGHIJKLMNOPQRSTUVWXYZ";
   const STEPS = 5;
-  const STEP_MS = 55;
-  const STAGGER_MS = 18;
+  const STEP_MS = 70;
+  const STAGGER_MS = 28;
 
   function animateGrid() {
     const glyphs = Array.from(gridEl.querySelectorAll(".glyph"));
