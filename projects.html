@@ -1,62 +1,67 @@
-<!DOCTYPE html>
-<html lang="en">
-<head>
-<meta charset="UTF-8">
-<meta name="viewport" content="width=device-width, initial-scale=1.0">
-<title>Projects — Internet Pastoralis</title>
-<link rel="stylesheet" href="style.css">
-</head>
-<body>
+<main>
+  <p class="eyebrow">Work</p>
+  <h1>Projects</h1>
 
-  <header class="site-header">
-    <div class="site-header-inner">
-      <div class="site-title-group">
-        <a class="site-title" href="index.html">Internet Pastoralis</a>
-        <nav class="site-nav" aria-label="Primary">
-          <a href="blog.html">Blog</a>
-          <a href="projects.html" aria-current="page">Projects</a>
-        </nav>
-      </div>
-      <div class="site-socials">
-        <a href="https://github.com/phirni" target="_blank" rel="noopener">GitHub</a>
-        <a href="https://www.linkedin.com/in/adya-yadav/" target="_blank" rel="noopener">LinkedIn</a>
-        <a href="https://x.com/forixv" target="_blank" rel="noopener">X</a>
-      </div>
-    </div>
-  </header>
+  <p class="lede">
+    Research prototypes and engineering projects exploring machine learning,
+    reinforcement learning, world models, and representation learning.
+  </p>
 
-  <main>
-    <p class="eyebrow">Work</p>
-    <h1>Projects</h1>
-    <p class="lede">A placeholder list — swap the titles, descriptions, and links below for the real thing whenever you're ready.</p>
+  <div class="project-card">
+    <h3>
+      <a href="https://github.com/phirni/url_iab_classifier" target="_blank" rel="noopener">
+        DistilBERT Multi-Label URL Classifier
+      </a>
+    </h3>
 
-    <div class="project-card">
-      <h3><a href="#">Project one</a></h3>
-      <p class="small">One line describing what it is and what it uses.</p>
-      <p><a href="#">Code</a> &middot; <a href="#">Writeup</a></p>
-    </div>
+    <p class="small">
+      Fine-tuned DistilBERT for multi-label IAB taxonomy classification on a
+      curated dataset of 4,526 URLs with weighted loss and threshold
+      optimization.
+    </p>
 
-    <div class="project-card">
-      <h3><a href="#">Project two</a></h3>
-      <p class="small">One line describing what it is and what it uses.</p>
-      <p><a href="#">Code</a> &middot; <a href="#">Writeup</a></p>
-    </div>
+    <p>
+      <a href="https://github.com/phirni/url_iab_classifier" target="_blank" rel="noopener">Code</a>
+      &middot;
+      <a href="https://huggingface.co/spaces/phirni/url_iab_classifier" target="_blank" rel="noopener">Demo</a>
+    </p>
+  </div>
 
-    <div class="project-card">
-      <h3><a href="#">Project three</a></h3>
-      <p class="small">One line describing what it is and what it uses.</p>
-      <p><a href="#">Code</a> &middot; <a href="#">Writeup</a></p>
-    </div>
 
-  </main>
+  <div class="project-card">
+    <h3>
+      <a href="https://huggingface.co/spaces/phirni/next_frame_prediction" target="_blank" rel="noopener">
+        Next-Frame Prediction in Atari Pong
+      </a>
+    </h3>
 
-  <footer class="site-footer">
-    <div class="site-footer-inner">
-      <span>Thank you.</span>
-      <span>&copy; <span id="year"></span> Adya Yadav</span>
-    </div>
-  </footer>
+    <p class="small">
+      Comparing ConvLSTM and β-VAE + RNN world models for video prediction on a
+      custom Atari Pong dataset, studying the trade-off between perceptual
+      quality and inference speed.
+    </p>
 
-  <script src="main.js"></script>
-</body>
-</html>
+    <p>
+      <a href="https://huggingface.co/spaces/phirni/next_frame_prediction" target="_blank" rel="noopener">Demo</a>
+    </p>
+  </div>
+
+
+  <div class="project-card">
+    <h3>
+      <a href="https://www.kaggle.com/code/swanieeeeeeee/fork-of-rl-proj-on-real-time-bidding-on-ads" target="_blank" rel="noopener">
+        Reinforcement Learning for Real-Time Bidding
+      </a>
+    </h3>
+
+    <p class="small">
+      A production-style reinforcement learning simulator for online ad bidding
+      using OpenAI Gym, Ray RLlib, PPO, and DQN under budget constraints.
+    </p>
+
+    <p>
+      <a href="https://www.kaggle.com/code/swanieeeeeeee/fork-of-rl-proj-on-real-time-bidding-on-ads" target="_blank" rel="noopener">Kaggle Notebook</a>
+    </p>
+  </div>
+
+</main>
